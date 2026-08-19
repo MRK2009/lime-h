@@ -161,10 +161,9 @@ class AndroidPlatform extends PlatformTarget
 
 		for (architecture in architectures)
 		{
-			var haxeParams = [hxml, "-D", "android", "-D", "PLATFORM=android-21"];
-			var cppParams = ["-Dandroid", "-DPLATFORM=android-21"];
-			var path = sourceSet + "/jniLibs/armeabi";
-			var suffix = ".so";
+			var minimumSDKVersion = project.config.getInt("android.minimum-sdk-version", 21);
+			var haxeParams = [hxml, "-D", "android", "-D", "PLATFORM=android-" + minimumSDKVersion, "-D", "PLATFORM_NUMBER=" + minimumSDKVersion];
+			var cppParams = ["-Dandroid", "-DPLATFORM=android-" + minimumSDKVersion, "-DPLATFORM_NUMBER=" + minimumSDKVersion];
 
 			if (architecture == Architecture.ARMV7)
 			{
@@ -368,11 +367,13 @@ class AndroidPlatform extends PlatformTarget
 
 		var commands = [];
 
-		if (armv5) commands.push(["-Dandroid", "-DPLATFORM=android-21"]);
-		if (armv7) commands.push(["-Dandroid", "-DHXCPP_ARMV7", "-DHXCPP_ARM7", "-DPLATFORM=android-21"]);
-		if (arm64) commands.push(["-Dandroid", "-DHXCPP_ARM64", "-DPLATFORM=android-21"]);
-		if (x86) commands.push(["-Dandroid", "-DHXCPP_X86", "-DPLATFORM=android-21"]);
-		if (x64) commands.push(["-Dandroid", "-DHXCPP_X86_64", "-DPLATFORM=android-21"]);
+		var minimumSDKVersion = project.config.getInt("android.minimum-sdk-version", 21);
+
+		if (armv5) commands.push(["-Dandroid", "-DPLATFORM=android-" + minimumSDKVersion, "-DPLATFORM_NUMBER=" + minimumSDKVersion]);
+		if (armv7) commands.push(["-Dandroid", "-DHXCPP_ARMV7", "-DPLATFORM=android-" + minimumSDKVersion, "-DPLATFORM_NUMBER=" + minimumSDKVersion]);
+		if (arm64) commands.push(["-Dandroid", "-DHXCPP_ARM64", "-DPLATFORM=android-" + minimumSDKVersion, "-DPLATFORM_NUMBER=" + minimumSDKVersion]);
+		if (x86) commands.push(["-Dandroid", "-DHXCPP_X86", "-DPLATFORM=android-" + minimumSDKVersion, "-DPLATFORM_NUMBER=" + minimumSDKVersion]);
+		if (x64) commands.push(["-Dandroid", "-DHXCPP_X86_64", "-DPLATFORM=android-" + minimumSDKVersion, "-DPLATFORM_NUMBER=" + minimumSDKVersion]);
 
 		CPPHelper.rebuild(project, commands);
 	}
@@ -421,31 +422,9 @@ class AndroidPlatform extends PlatformTarget
 
 		for (asset in project.assets)
 		{
-			if (asset.type != AssetType.TEMPLATE)
+			if (asset.embed != true && asset.type != AssetType.TEMPLATE)
 			{
-				var targetPath = "";
-
-				switch (asset.type)
-				{
-					default:
-						// case SOUND, MUSIC:
-
-						// var extension = Path.extension (asset.sourcePath);
-						// asset.flatName += ((extension != "") ? "." + extension : "");
-
-						// asset.resourceName = asset.flatName;
-						targetPath = Path.combine(sourceSet + "/assets/", asset.resourceName);
-
-						// asset.resourceName = asset.id;
-						// targetPath = sourceSet + "/res/raw/" + asset.flatName + "." + Path.extension (asset.targetPath);
-
-						// default:
-
-						// asset.resourceName = asset.flatName;
-						// targetPath = sourceSet + "/assets/" + asset.resourceName;
-				}
-
-				AssetHelper.copyAssetIfNewer(asset, targetPath);
+				AssetHelper.copyAssetIfNewer(asset, Path.combine(sourceSet + "/assets/", asset.resourceName));
 			}
 		}
 
@@ -594,11 +573,14 @@ class AndroidPlatform extends PlatformTarget
 
 		for (asset in project.assets)
 		{
-			if (asset.type == AssetType.TEMPLATE)
+			if (asset.embed != true)
 			{
-				var targetPath = Path.combine(destination, asset.targetPath);
-				System.mkdir(Path.directory(targetPath));
-				AssetHelper.copyAsset(asset, targetPath, context);
+				if (asset.type == AssetType.TEMPLATE)
+				{
+					var targetPath = Path.combine(destination, asset.targetPath);
+					System.mkdir(Path.directory(targetPath));
+					AssetHelper.copyAsset(asset, targetPath, context);
+				}
 			}
 		}
 	}
