@@ -246,6 +246,7 @@ class IOSPlatform extends PlatformTarget
 		var armv7 = false;
 		var armv7s = false;
 		var arm64 = false;
+		var i386 = false;
 		var architectures = project.architectures;
 
 		if (architectures == null || architectures.length == 0)
@@ -277,6 +278,9 @@ class IOSPlatform extends PlatformTarget
 				case ARM64:
 					valid_archs.push("arm64");
 					arm64 = true;
+				case X86:
+					valid_archs.push("i386");
+					i386 = true;
 				default:
 			}
 		}
@@ -284,7 +288,6 @@ class IOSPlatform extends PlatformTarget
 		context.CURRENT_ARCHS = "( " + valid_archs.join(",") + ") ";
 
 		valid_archs.push("x86_64");
-		valid_archs.push("i386");
 
 		context.VALID_ARCHS = valid_archs.join(" ");
 		context.THUMB_SUPPORT = armv6 ? "GCC_THUMB_SUPPORT = NO;" : "";
@@ -309,6 +312,7 @@ class IOSPlatform extends PlatformTarget
 		context.ARMV7 = armv7;
 		context.ARMV7S = armv7s;
 		context.ARM64 = arm64;
+		context.I386 = i386;
 		context.TARGET_DEVICES = switch (project.config.getString("ios.device", "universal"))
 		{
 			case "iphone": "1";
@@ -481,7 +485,7 @@ class IOSPlatform extends PlatformTarget
 		var armv7s = (project.architectures.indexOf(Architecture.ARMV7S) > -1 && !project.targetFlags.exists("simulator"));
 		var arm64 = (command == "rebuild"
 			|| (project.architectures.indexOf(Architecture.ARM64) > -1 && !project.targetFlags.exists("simulator")));
-		var i386 = (command == "rebuild" || project.targetFlags.exists("simulator"));
+		var i386 = (project.architectures.indexOf(Architecture.X86) > -1 && project.targetFlags.exists("simulator"));
 		var x86_64 = (command == "rebuild" || project.targetFlags.exists("simulator"));
 
 		var arc = (project.targetFlags.exists("arc"));
@@ -800,6 +804,8 @@ class IOSPlatform extends PlatformTarget
 			if (arch == "armv7s" && !context.ARMV7S) continue;
 
 			if (arch == "arm64" && !context.ARM64) continue;
+
+			if (arch == "i386" && !context.I386) continue;
 
 			var libExt = [
 				".iphoneos.a",
