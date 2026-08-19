@@ -255,7 +255,7 @@ class IOSPlatform extends PlatformTarget
 
 		if (project.config.getString("ios.device", "universal") == "universal" || project.config.getString("ios.device") == "iphone")
 		{
-			if (project.config.getFloat("ios.deployment", 9) < 5)
+			if (project.config.getFloat("ios.deployment", 13) < 5)
 			{
 				ArrayTools.addUnique(architectures, Architecture.ARMV6);
 			}
@@ -322,7 +322,7 @@ class IOSPlatform extends PlatformTarget
 			context.OBJC_ARC = true;
 		}
 
-		// context.ENABLE_BITCODE = (project.config.getFloat ("ios.deployment", 9) >= 6);
+		// context.ENABLE_BITCODE = (project.config.getFloat ("ios.deployment", 13) >= 6);
 		context.ENABLE_BITCODE = project.config.getBool("ios.enable-bitcode", false);
 		context.IOS_COMPILER = project.config.getString("ios.compiler", "clang");
 		context.CPP_BUILD_LIBRARY = project.config.getString("cpp.buildLibrary", "hxcpp");
